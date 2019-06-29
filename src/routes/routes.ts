@@ -13,8 +13,8 @@ const regLimiter = rateLimit({
 const router: Router = Router();
 
 router.use("/user", regLimiter, userRouter);
-router.use("/user", regLimiter, userRouter);
-router.use("/user", regLimiter, userRouter);
+// router.use("/user", regLimiter, userRouter);
+// router.use("/user", regLimiter, userRouter);
 
 
 router.post("/token", regLimiter, (req, res, next) => {
@@ -32,12 +32,7 @@ router.post("/token", regLimiter, (req, res, next) => {
             } else {
 
                             const tokenStuff = {
-                                email: data.Item.email,
-                                phoneNumber: data.Item.phoneNumber,
-                                username: data.Item.username,
-                                isRegistered: data.Item.isRegistered,
-                                // publicKey: data.Item.publicKey,
-                                isSelected: isSelected
+                               
                             };
                             var token = jwt.sign(tokenStuff, process.env.SECRET);
                             // //console.log(token)
