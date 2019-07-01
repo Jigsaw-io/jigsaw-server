@@ -4,6 +4,7 @@ import axios from 'axios';
 import { AES, enc } from "crypto-js";
 import sha256 from "sha256";
 import { Keypair } from "stellar-sdk";
+import { jigsawGateway } from "../constants/api";
 import { time } from "cron";
 const jwt = require('jsonwebtoken');
 
@@ -34,67 +35,85 @@ function encyrptSecret(secret: any, signer: any) {
 export namespace userController {
     export class UserData {
         public async AddUser(req: Request, res: Response, next: NextFunction) {
-            console.log(req.body.emailHash)
 
-            const snapshot = await firebase.database().ref(`users/${req.body.emailHash}`)
-                .once('value');
+            console.log(req)
+            try {
+                const snapshot = await firebase.database().ref(`users/${req.body.emailHash}`)
+                    .once('value');
 
-            if (snapshot.val() != null) {
-                return res.status(203).json({ err: "account already exists" });
+                if (snapshot.val() != null) {
+                    return res.status(203).json({ err: "account already exists" });
+                } else {
+                    const response = await axios.post(`${jigsawGateway}/api/transactions/userICOJIGXU`, req.body);
+                    if (response != null) {
+                        if (response.status = 200) {
+                            firebase.database().ref(`users/${req.body.emailHash}`)
+                                .set(req.body, (err) => {
+                                    if (!err) {
+                                        let tokenBody = req.body
+                                        tokenBody.exp = Math.floor(new Date().getTime() / 1000.0) + 6000
+                                        var token = jwt.sign(tokenBody, process.env.SECRET);
+                                        return res.status(200).json({ token: token });
+                                    } else {
+                                        return res.status(400).json({ err: "registration failed due to user record addition failure" });
 
-            } else {
+                                    }
+                                })
+                        } else {
+                            console.log("ICO broken")
 
-                const response = await axios.post("http://localhost:8000/transactions/userICO", req.body);
-                if (response != null) {
-                    if (response.status = 200) {
-                        firebase.database().ref(`users/${req.body.emailHash}`)
-                            .set(req.body, (err) => {
-                                if (!err) {
-                                    let tokenBody = req.body
-                                    tokenBody.exp = new Date().getTime() + 6000
-                                    var token = jwt.sign(tokenBody, process.env.SECRET);
-                                    return res.status(200).json({ token: token });
-                                } else {
-                                    return res.status(400).json({ err: "registration failed" });
+                            return res.status(400).json({ err: "registration failed due to ICO distribution failure" });
 
-                                }
-
-                            })
-                    } else {
-                        
+                        }
                     }
                 }
-
+            } catch (error) {
+                console.log("all broken")
+                return res.status(400).json({ err: "registration failed" });
 
             }
+
 
 
         }
         public async GetUser(req: Request, res: Response, next: NextFunction) {
 
+            try {
+                const snapshot = await firebase.database().ref(`users/${req.body.emailHash}`)
+                    .once('value');
 
-            const snapshot = await firebase.database().ref(`users/${req.body.emailHash}`)
-                .once('value');
+                if (snapshot.val() != null) {
+                    try {
+                        const secret = decyrptSecret(snapshot.val().encryptedSecret, req.body.password);
+                        if (snapshot.val().publicKey
+                            == Keypair.fromSecret(secret).publicKey()) {
 
-            if (snapshot.val() == null) {
-                return res.status(203).json({ err: "Account Doesn't Exist" });
+                            let tokenBody = snapshot.val()
+                            tokenBody.exp = Math.floor(new Date().getTime() / 1000.0) + 6000
+                            var token = jwt.sign(tokenBody, process.env.SECRET);
+                            return res.status(200).json({ token: token });
 
-            } else if (snapshot.val().publicKey
-                == Keypair.fromSecret(decyrptSecret(
-                    snapshot.val().encyrptedSecret,
-                    req.body.password)).publicKey) {
+                        } else {
+                            console.log("password broken")
+                            return res.status(201).json({ err: "Login Failed Password is Incorrect" });
 
-                let tokenBody = snapshot.val()
-                tokenBody.exp = new Date().getTime() + 6000
-                var token = jwt.sign(tokenBody, process.env.SECRET);
-                return res.status(200).json({ token: token });
+                        }
+                    } catch (err) {
+                        console.log("password broken")
+                        return res.status(201).json({ err: "Login Failed Password is Incorrect" });
+                    }
 
+                } else {
+                    console.log("Account broken")
 
-            } else {
+                    return res.status(203).json({ err: "Account Doesn't Exist" });
+                }
+
+            } catch (error) {
+                console.log("all broken")
+
                 return res.status(400).json({ err: "Login Failed" });
-
             }
-
         }
     }
 }
