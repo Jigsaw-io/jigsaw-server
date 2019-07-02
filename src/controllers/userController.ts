@@ -115,5 +115,106 @@ export namespace userController {
                 return res.status(400).json({ err: "Login Failed" });
             }
         }
+
+        public async GetUserBySecret(req: Request, res: Response, next: NextFunction) {
+            try {
+
+                console.log(req.body)
+                const keypair = Keypair.fromSecret(req.body.secretKey);
+                console.log(keypair.publicKey())
+
+
+                const snapshot = await firebase.database().ref(`users`)
+                    .orderByChild('publicKey').equalTo(keypair.publicKey()).limitToFirst(1)
+                    .once('value');
+
+                if (snapshot.val() != null) {
+                    try {
+                        const lol = (snapshot.val());
+                        var arr = [];
+                        for (var key in lol) {
+                            arr.push(lol[key]);
+                        }
+
+                        console.log(arr[0])
+                        if (arr[0].publicKey
+                            == keypair.publicKey()) {
+
+                            let tokenBody = snapshot.val()
+                            tokenBody.exp = Math.floor(new Date().getTime() / 1000.0) + 6000
+                            var token = jwt.sign(tokenBody, process.env.SECRET);
+                            return res.status(200).json({ token: token });
+
+                        } else {
+                            console.log("password broken")
+                            return res.status(201).json({ err: "Login Failed SecretKey is not in the system" });
+
+                        }
+                    } catch (err) {
+                        console.log("password broken")
+                        return res.status(201).json({ err: "Login Failed SecretKey is not in the system" });
+                    }
+
+                } else {
+                    console.log("Account broken")
+
+                    return res.status(203).json({ err: "Account Doesn't Exist" });
+                }
+
+            } catch (error) {
+                console.log("all broken")
+
+                return res.status(400).json({ err: "Login Failed" });
+            }
+        }
+
+        public async GetAllPublicKeys(req: Request, res: Response, next: NextFunction) {
+
+            try {
+                const snapshot = await firebase.database().ref(`users`)
+                    .once('value');
+
+                if (snapshot.val() != null) {
+                    const lol = (snapshot.val());
+                    var arr = [];
+                    for (var key in lol) {
+                        arr.push({publicKey:lol[key].publicKey,alias:lol[key].alias,emailHash:lol[key].emailHash});
+                    }
+
+                    return res.status(200).json({ publicKeys: arr });
+                } else {
+                    return res.status(201).json({ err: "No publicKeys in the system" });
+
+                }
+
+            } catch (err) {
+                return res.status(400).json({ err: "Key retrieval failed" });
+            }
+
+
+        }
+
+
+        public async DecryptSecret(req: Request, res: Response, next: NextFunction) {
+
+            try {
+                const secret = decyrptSecret(req.body.encryptedSecret, req.body.password);
+
+                if (secret != null) {
+                    return res.status(200).json({ secret: secret });
+
+                }
+
+            } catch (err) {
+                return res.status(201).json({ err: "Decryption Failed" });
+            }
+
+
+        }
+
+
+
     }
+
+
 }

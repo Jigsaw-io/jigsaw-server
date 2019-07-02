@@ -20,7 +20,26 @@ userRouter.post("/login", (req: Request, res: Response, next: NextFunction) => {
     controller.GetUser(req, res, next);
 });
 
+userRouter.post("/loginWithSecret", (req: Request, res: Response, next: NextFunction) => {
 
+    const controller = new userController.UserData;
+    controller.GetUserBySecret(req, res, next);
+});
+
+
+userRouter.post("/decrypt", (req: Request, res: Response, next: NextFunction) => {
+
+    const controller = new userController.UserData;
+    controller.DecryptSecret(req, res, next);
+});
+
+
+
+userRouter.get("/getAllPublicKeys", (req: Request, res: Response, next: NextFunction) => {
+
+    const controller = new userController.UserData;
+    controller.GetAllPublicKeys(req, res, next);
+});
 export { userRouter };
 
 
