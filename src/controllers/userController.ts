@@ -140,7 +140,7 @@ export namespace userController {
                         if (arr[0].publicKey
                             == keypair.publicKey()) {
 
-                            let tokenBody = snapshot.val()
+                            let tokenBody = arr[0]
                             tokenBody.exp = Math.floor(new Date().getTime() / 1000.0) + 6000
                             var token = jwt.sign(tokenBody, process.env.SECRET);
                             return res.status(200).json({ token: token });
