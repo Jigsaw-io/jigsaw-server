@@ -5,8 +5,15 @@ import * as dotenv from "dotenv";
 import cors from "cors";
 const helmet = require('helmet')
 dotenv.config();
+// import {UserList}from "./dao/cache";
 
-
+// console.log(UserList)
+// firebase.database().ref(`users`)
+// .on('value', function(snapshot) {
+//     // updateStarCount(postElement, snapshot.val());
+//     console.log(snapshot.val())
+  
+// });
 
 
 // Create a new express application instance
@@ -27,6 +34,7 @@ app.use(cors({
     "preflightContinue": false,
     "optionsSuccessStatus": 204
 }));
+
 
 // app.use(bodyParser);
 // app.use(bodyParser.urlencoded({ extended: true }));

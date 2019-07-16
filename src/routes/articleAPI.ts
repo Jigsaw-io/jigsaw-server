@@ -1,5 +1,5 @@
 
-import { userController } from "../controllers/userController";
+import { knowledgeController } from "../controllers/knowledgeController";
 import { Router, Request, Response, NextFunction } from "express";
 import axios from 'axios';
 import { auth } from '../middleware/auth';
@@ -7,20 +7,31 @@ import { auth } from '../middleware/auth';
 
 const articleRouter: Router = Router();
 
-articleRouter.post("/add", (req: Request, res: Response, next: NextFunction) => {
+articleRouter.post("/create",auth, (req: Request, res: Response, next: NextFunction) => {
 
-    const controller = new userController.UserData;
-    controller.AddUser(req, res, next);
+    const controller = new knowledgeController.KnowledgeData;
+    controller.CreateKnowledge(req, res, next);
 
 });
 
-articleRouter.post("/login", (req: Request, res: Response, next: NextFunction) => {
+articleRouter.post("/add", auth,(req: Request, res: Response, next: NextFunction) => {
 
-    const controller = new userController.UserData;
-    controller.GetUser(req, res, next);
+    const controller = new knowledgeController.KnowledgeData;
+    controller.AddKnowledge(req, res, next);
+});
+
+articleRouter.get("/find", (req: Request, res: Response, next: NextFunction) => {
+
+    const controller = new knowledgeController.KnowledgeData;
+    controller.FindKnowledge(req, res, next);
 });
 
 
+articleRouter.get("/get/:id", (req: Request, res: Response, next: NextFunction) => {
+
+    const controller = new knowledgeController.KnowledgeData;
+    controller.GetKnowledge(req, res, next);
+});
 export { articleRouter };
 
 

@@ -17,7 +17,7 @@ const regLimiter = rateLimit({
 const router: Router = Router();
 
 router.use("/user", userRouter);
-router.use("/article", regLimiter, auth, articleRouter);
+router.use("/article", regLimiter, articleRouter);
 
 router.post("/token", regLimiter, (req, res, next) => {
 
