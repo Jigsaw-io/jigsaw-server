@@ -50,13 +50,16 @@ export namespace userController {
     export class UserData {
         public async AddUser(req: Request, res: Response, next: NextFunction) {
 
-            console.log(req)
             try {
-                const snapshot = await firebase.database().ref(`users/${req.body.emailHash}`)
-                    .once('value');
-                if (snapshot.val() != null) {
-                    // if(User[req.body.emailHash]!=null){
-                        return res.status(203).json({ err: "account already exists" });
+                let doesntExist = false;
+                if (!User[req.body.emailHash]) {
+                    doesntExist =true;
+                }
+                // const snapshot = await firebase.database().ref(`users/${req.body.emailHash}`)
+                //     .once('value');
+                if (!doesntExist) {
+                    // if(!(!User[req.body.emailHash])){
+                    return res.status(203).json({ err: "account already exists" });
                     // }
                 } else {
                     const response = await axios.post(`${jigsawGateway}/api/transactions/userICOJIGXU`, req.body);
@@ -193,7 +196,7 @@ export namespace userController {
                     const lol = User;
                     var arr = [];
                     for (var key in User) {
-                        arr.push({publicKey:lol[key].publicKey,alias:lol[key].alias,emailHash:lol[key].emailHash});
+                        arr.push({ publicKey: lol[key].publicKey, alias: lol[key].alias, emailHash: lol[key].emailHash });
                     }
 
                     return res.status(200).json({ publicKeys: arr });
