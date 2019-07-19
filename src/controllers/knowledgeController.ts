@@ -8,38 +8,31 @@ import { jigsawGateway } from "../constants/api";
 import { time } from "cron";
 const jwt = require('jsonwebtoken');
 
+//global cache for knowledge
+var Knowledge: any = null
 
-var obj: any = {
-    123: {
-        id: "123",
-        title: "hello",
-        draft: "jello"
-    }, 1234: {
-        id: "1234",
-        title: "hello",
-        draft: "jello"
-    }, 12345: {
-        id: "12345",
-        title: "hello",
-        draft: "jello"
-    }, 123456: {
-        id: "123456",
-        title: "hello",
-        draft: "jello"
-    }, 1234567: {
-        id: "1234567",
-        title: "hello",
-        draft: "jello"
-    }, 12345678: {
-        id: "12345678",
-        title: "hello",
-        draft: "jello"
-    }, 123456789: {
-        id: "123456789",
-        title: "hello",
-        draft: "jello"
-    }
+//subcription to firebase for knowledge updates
+firebase.database().ref(`knowledge`)
+    .on('value', onKnowledge)
 
+//updating knowledge cache
+function onKnowledge(snapshot: any) {
+    console.log("Knowledge Cached")
+    Knowledge = snapshot.val()
+}
+
+
+//global cache for knowledge
+var Contribution: any = null
+
+//subcription to firebase for knowledge updates
+firebase.database().ref(`contribution`)
+    .on('value', onContribution)
+
+//updating knowledge cache
+function onContribution(snapshot: any) {
+    console.log("Contribution Cached")
+    Contribution = snapshot.val()
 }
 export namespace knowledgeController {
     export class KnowledgeData {
@@ -48,42 +41,42 @@ export namespace knowledgeController {
 
             try {
 
+//old data juice
+                // const snapshot = await firebase.database().ref(`knowledge`)
+                //     .once('value');
 
-                const snapshot = await firebase.database().ref(`knowledge`)
-                    .once('value');
+                // if (snapshot.val() != null) {
+                //     const lol = (snapshot.val());
+                //     var arr = [];
+                //     for (var key in lol) {
+                //         lol[key].id = key
 
-                if (snapshot.val() != null) {
-                    const lol = (snapshot.val());
-                var arr = [];
-                for (var key in lol) {
-                    lol[key].id = key
+                //         arr.push(
+                //             {
+                //                 id: key,
+                //                 title: lol[key].data.title,
+                //                 cover: lol[key].data.cover
+                //             }
+                //         );
+                //     }
 
-                    arr.push(
-                        {
-                            id: key,
-                            title: lol[key].data.title,
-                            cover:lol[key].data.cover
-                        }
-                    );
-                }
+                if (Knowledge != null) {
+                    var arr = [];
+                    for (var key in Knowledge) {
+                        Knowledge[key].id = key
 
-                // var arr = [];
-                // for (var key in obj) {
-                //     obj[key].id = key
+                        arr.push(
+                            {
+                                id: key,
+                                title: Knowledge[key].data.title,
+                                cover: Knowledge[key].data.cover
+                            }
+                        );
+                    }
 
-                //     arr.push(
-                //         {
-                //             id: key,
-                //             title: obj[key].title,
-                //             draft: obj[key].draft
-                //         }
-                //     );
-                // }
-
-
-                return res.status(200).json({ knowledge: arr });
+                    return res.status(200).json({ knowledge: arr });
                 } else {
-                return res.status(201).json({ err: "No Knowledge in the system" });
+                    return res.status(201).json({ err: "No Knowledge in the system" });
 
                 }
 
@@ -102,17 +95,27 @@ export namespace knowledgeController {
 
             try {
 
+//old data juice
+                // const snapshot = await firebase.database().ref(`knowledge/${req.params.id}`)
+                //     .once('value');
 
-                const snapshot = await firebase.database().ref(`knowledge/${req.params.id}`)
-                    .once('value');
-
-                if (snapshot.val() != null) {
-                    const lol = (snapshot.val());
+                // if (snapshot.val() != null) {
+                //     const lol = (snapshot.val());
 
 
-                return res.status(200).json({ knowledge: lol.data });
+                //     return res.status(200).json({ knowledge: lol.data });
 
-                // return res.status(200).json({ knowledge: obj[req.params.id] });
+                //     // return res.status(200).json({ knowledge: obj[req.params.id] });
+                // } else {
+                //     return res.status(201).json({ err: "No Knowledge in the system" });
+
+                // }
+
+
+                if (Knowledge != null) {
+                    // console.log(Knowledge[req.params.id]);
+                    return res.status(200).json({ knowledge: Knowledge[req.params.id].data });
+
                 } else {
                     return res.status(201).json({ err: "No Knowledge in the system" });
 
@@ -121,10 +124,6 @@ export namespace knowledgeController {
             } catch (err) {
                 return res.status(400).json({ err: "Knowledge retrieval failed" });
             }
-
-
-
-
         }
 
         public async CreateKnowledge(req: Request, res: Response, next: NextFunction) {
@@ -158,23 +157,64 @@ export namespace knowledgeController {
 
 
         }
-        public async AddKnowledge(req: Request, res: Response, next: NextFunction) {
+        public async AddContribution(req: Request, res: Response, next: NextFunction) {
 
             // console.log(req)
             try {
-                const snapshot = await firebase.database().ref(`users/${req.body.emailHash}`)
-                    .once('value');
+                firebase.database().ref(`contribution/${req.body.hash}`)
+                    .set(req.body, (err) => {
+                        if (!err) {
 
-                if (snapshot.val() != null) {
-                    return res.status(203).json({ err: "account already exists" });
-                } else {
+                            return res.status(200).json({ status: "success" });
+                        } else {
+                            return res.status(201).json({ err: "contribution failed db on fire" });
 
-                }
+                        }
+                    })
             } catch (error) {
                 console.log("all broken")
-                return res.status(400).json({ err: "registration failed" });
+                return res.status(400).json({ err: "contribution failed" });
 
             }
+
+
+
+        }
+        public async GetContribution(req: Request, res: Response, next: NextFunction) {
+
+
+            try {
+
+
+                // const snapshot = await firebase.database().ref(`knowledge/${req.params.id}`)
+                //     .once('value');
+
+                // if (snapshot.val() != null) {
+                //     const lol = (snapshot.val());
+
+
+                //     return res.status(200).json({ knowledge: lol.data });
+
+                //     // return res.status(200).json({ knowledge: obj[req.params.id] });
+                // } else {
+                //     return res.status(201).json({ err: "No Knowledge in the system" });
+
+                // }
+
+                if (Contribution!= null) {
+
+                    return res.status(200).json({ contribution: Contribution[req.params.id] });
+
+                } else {
+                    return res.status(201).json({ err: "No Knowledge in the system" });
+
+                }
+
+
+            } catch (err) {
+                return res.status(400).json({ err: "Knowledge retrieval failed" });
+            }
+
 
 
 

@@ -8,6 +8,20 @@ import { jigsawGateway } from "../constants/api";
 import { time } from "cron";
 const jwt = require('jsonwebtoken');
 
+//global cache for user
+var User: any = null
+
+//subcription to firebase for user updates
+firebase.database().ref(`users`)
+    .on('value', onUser)
+
+//updating user cache
+function onUser(snapshot: any) {
+    console.log("User Cached")
+    User = snapshot.val()
+}
+
+
 function hashEmail(email: any) {
     return sha256(email);
 }
@@ -38,11 +52,12 @@ export namespace userController {
 
             console.log(req)
             try {
-                const snapshot = await firebase.database().ref(`users/${req.body.emailHash}`)
-                    .once('value');
-
-                if (snapshot.val() != null) {
-                    return res.status(203).json({ err: "account already exists" });
+                // const snapshot = await firebase.database().ref(`users/${req.body.emailHash}`)
+                //     .once('value');
+                if (User != null) {
+                    if(User[req.body.emailHash]!=null){
+                        return res.status(203).json({ err: "account already exists" });
+                    }
                 } else {
                     const response = await axios.post(`${jigsawGateway}/api/transactions/userICOJIGXU`, req.body);
                     if (response != null) {
@@ -79,16 +94,16 @@ export namespace userController {
         public async GetUser(req: Request, res: Response, next: NextFunction) {
 
             try {
-                const snapshot = await firebase.database().ref(`users/${req.body.emailHash}`)
-                    .once('value');
+                // const snapshot = await firebase.database().ref(`users/${req.body.emailHash}`)
+                //     .once('value');
 
-                if (snapshot.val() != null) {
+                if (User != null) {
                     try {
-                        const secret = decyrptSecret(snapshot.val().encryptedSecret, req.body.password);
-                        if (snapshot.val().publicKey
+                        const secret = decyrptSecret(User[req.body.emailHash].encryptedSecret, req.body.password);
+                        if (User[req.body.emailHash].publicKey
                             == Keypair.fromSecret(secret).publicKey()) {
 
-                            let tokenBody = snapshot.val()
+                            let tokenBody = User[req.body.emailHash]
                             tokenBody.exp = Math.floor(new Date().getTime() / 1000.0) + 6000
                             var token = jwt.sign(tokenBody, process.env.SECRET);
                             return res.status(200).json({ token: token });
@@ -171,13 +186,13 @@ export namespace userController {
         public async GetAllPublicKeys(req: Request, res: Response, next: NextFunction) {
 
             try {
-                const snapshot = await firebase.database().ref(`users`)
-                    .once('value');
+                // const snapshot = await firebase.database().ref(`users`)
+                //     .once('value');
 
-                if (snapshot.val() != null) {
-                    const lol = (snapshot.val());
+                if (User != null) {
+                    const lol = User;
                     var arr = [];
-                    for (var key in lol) {
+                    for (var key in User) {
                         arr.push({publicKey:lol[key].publicKey,alias:lol[key].alias,emailHash:lol[key].emailHash});
                     }
 

@@ -14,11 +14,7 @@ articleRouter.post("/create",auth, (req: Request, res: Response, next: NextFunct
 
 });
 
-articleRouter.post("/add", auth,(req: Request, res: Response, next: NextFunction) => {
 
-    const controller = new knowledgeController.KnowledgeData;
-    controller.AddKnowledge(req, res, next);
-});
 
 articleRouter.get("/find", (req: Request, res: Response, next: NextFunction) => {
 
@@ -32,6 +28,19 @@ articleRouter.get("/get/:id", (req: Request, res: Response, next: NextFunction) 
     const controller = new knowledgeController.KnowledgeData;
     controller.GetKnowledge(req, res, next);
 });
+
+articleRouter.post("/contribute", auth,(req: Request, res: Response, next: NextFunction) => {
+
+    const controller = new knowledgeController.KnowledgeData;
+    controller.AddContribution(req, res, next);
+});
+
+articleRouter.get("/getContribution/:id", (req: Request, res: Response, next: NextFunction) => {
+
+    const controller = new knowledgeController.KnowledgeData;
+    controller.GetContribution(req, res, next);
+});
+
 export { articleRouter };
 
 
