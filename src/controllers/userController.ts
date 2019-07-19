@@ -52,12 +52,12 @@ export namespace userController {
 
             console.log(req)
             try {
-                // const snapshot = await firebase.database().ref(`users/${req.body.emailHash}`)
-                //     .once('value');
-                if (User != null) {
-                    if(User[req.body.emailHash]!=null){
+                const snapshot = await firebase.database().ref(`users/${req.body.emailHash}`)
+                    .once('value');
+                if (snapshot.val() != null) {
+                    // if(User[req.body.emailHash]!=null){
                         return res.status(203).json({ err: "account already exists" });
-                    }
+                    // }
                 } else {
                     const response = await axios.post(`${jigsawGateway}/api/transactions/userICOJIGXU`, req.body);
                     if (response != null) {
