@@ -131,15 +131,18 @@ export namespace knowledgeController {
             // console.log(req)
             try {
                 firebase.database().ref(`knowledge/${req.body.hash}`)
-                    .set(req.body, async(err) => {
+                    .set(req.body, async (err) => {
                         if (!err) {
 
-                            const response = await axios.post(`${jigsawGateway}/api/transactions/genesis`, { xdr: req.body.xdr });
-                            if (response != null) {
+                            axios.post(`${jigsawGateway}/api/transactions/genesis`, { xdr: req.body.xdr })
+                            .then((response) => {
+                                console.log(response.data)
                                 return res.status(200).json({ status: "success" });
-                            } else {
+                            })
+                            .catch(err => {
+                                console.log(err.message)
                                 return res.status(201).json({ err: "knowledge genesis failed in Gateway" });
-                            }
+                            })
                         } else {
                             return res.status(201).json({ err: "knowledge genesis failed db on fire" });
 
@@ -168,12 +171,16 @@ export namespace knowledgeController {
                     .set(req.body, async (err) => {
                         if (!err) {
 
-                            const response = await axios.post(`${jigsawGateway}/api/transactions/contribute`, { xdr: req.body.xdr });
-                            if (response != null) {
-                                return res.status(200).json({ status: "success" });
-                            } else {
-                                return res.status(201).json({ err: "contribution failed in Gateway" });
-                            }
+                            axios.post(`${jigsawGateway}/api/transactions/contribute`, { xdr: req.body.xdr })
+                                .then((response) => {
+                                    console.log(response)
+                                    return res.status(200).json({ status: "success" });
+                                })
+                                .catch(err => {
+                                    console.log(err)
+                                    return res.status(201).json({ err: "contribution failed in Gateway" });
+                                })
+                           
                         } else {
                             return res.status(201).json({ err: "contribution failed db on fire" });
 
