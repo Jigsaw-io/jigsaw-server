@@ -29,7 +29,7 @@ app.use(function (req, res, next) {
     next();
 });
 app.use(cors({
-    "origin": ["https://jigsaw-io.firebaseapp.com","http://localhost:3000"],
+    "origin": ["https://jigsaw-io.firebaseapp.com","http://localhost:3000","https://jigsaw.cf"],
     "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
     "preflightContinue": false,
     "optionsSuccessStatus": 204
