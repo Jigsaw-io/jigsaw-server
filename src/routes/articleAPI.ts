@@ -35,7 +35,7 @@ articleRouter.post("/contribute", auth,(req: Request, res: Response, next: NextF
     controller.AddContribution(req, res, next);
 });
 
-articleRouter.get("/getContribution/:id", (req: Request, res: Response, next: NextFunction) => {
+articleRouter.get("/getContributions/:id", (req: Request, res: Response, next: NextFunction) => {
 
     const controller = new knowledgeController.KnowledgeData;
     controller.GetContribution(req, res, next);

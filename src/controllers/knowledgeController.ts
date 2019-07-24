@@ -41,7 +41,7 @@ export namespace knowledgeController {
 
             try {
 
-//old data juice
+                //old data juice
                 // const snapshot = await firebase.database().ref(`knowledge`)
                 //     .once('value');
 
@@ -95,7 +95,7 @@ export namespace knowledgeController {
 
             try {
 
-//old data juice
+                //old data juice
                 // const snapshot = await firebase.database().ref(`knowledge/${req.params.id}`)
                 //     .once('value');
 
@@ -131,22 +131,22 @@ export namespace knowledgeController {
             // console.log(req)
             try {
                 firebase.database().ref(`knowledge/${req.body.hash}`)
-                    .set(req.body, (err) => {
+                    .set(req.body, async(err) => {
                         if (!err) {
 
-                            return res.status(200).json({ status: "success" });
+                            const response = await axios.post(`${jigsawGateway}/api/transactions/genesis`, { xdr: req.body.xdr });
+                            if (response != null) {
+                                return res.status(200).json({ status: "success" });
+                            } else {
+                                return res.status(201).json({ err: "knowledge genesis failed in Gateway" });
+                            }
                         } else {
                             return res.status(201).json({ err: "knowledge genesis failed db on fire" });
 
                         }
                     })
 
-                // const response = await axios.post(`${jigsawGateway}/api/transactions/genesis`, { xdr: req.body.xdr });
-                // if (response != null) {
 
-                // } else {
-
-                // }
 
             } catch (error) {
                 console.log("all broken")
@@ -159,13 +159,21 @@ export namespace knowledgeController {
         }
         public async AddContribution(req: Request, res: Response, next: NextFunction) {
 
-            // console.log(req)
+            // console.log(req.body.hash)
+            var hash = req.body.hash
             try {
-                firebase.database().ref(`contribution/${req.body.hash}`)
-                    .set(req.body, (err) => {
+
+
+                firebase.database().ref(`contribution/${req.body.kId}/${hash}`)
+                    .set(req.body, async (err) => {
                         if (!err) {
 
-                            return res.status(200).json({ status: "success" });
+                            const response = await axios.post(`${jigsawGateway}/api/transactions/contribute`, { xdr: req.body.xdr });
+                            if (response != null) {
+                                return res.status(200).json({ status: "success" });
+                            } else {
+                                return res.status(201).json({ err: "contribution failed in Gateway" });
+                            }
                         } else {
                             return res.status(201).json({ err: "contribution failed db on fire" });
 
@@ -201,9 +209,23 @@ export namespace knowledgeController {
 
                 // }
 
-                if (Contribution!= null) {
+                if (Contribution != null) {
 
-                    return res.status(200).json({ contribution: Contribution[req.params.id] });
+                    if (!Contribution[req.params.id]) {
+                        return res.status(201).json({ err: "No Knowledge in the system" });
+
+                    } else {
+                        var arr = [];
+                        for (var key in Contribution[req.params.id]) {
+                            (Contribution[req.params.id])[key].id = key
+
+                            arr.push(
+                                (Contribution[req.params.id])[key]
+                            );
+                        }
+                        return res.status(200).json({ contributions: arr });
+                    }
+
 
                 } else {
                     return res.status(201).json({ err: "No Knowledge in the system" });

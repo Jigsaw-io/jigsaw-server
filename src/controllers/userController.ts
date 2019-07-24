@@ -69,7 +69,7 @@ export namespace userController {
                                 .set(req.body, (err) => {
                                     if (!err) {
                                         let tokenBody = req.body
-                                        tokenBody.exp = Math.floor(new Date().getTime() / 1000.0) + 6000
+                                        tokenBody.exp = Math.floor(new Date().getTime() / 1000.0) + 12000
                                         var token = jwt.sign(tokenBody, process.env.SECRET);
                                         return res.status(200).json({ token: token });
                                     } else {
@@ -107,7 +107,7 @@ export namespace userController {
                             == Keypair.fromSecret(secret).publicKey()) {
 
                             let tokenBody = User[req.body.emailHash]
-                            tokenBody.exp = Math.floor(new Date().getTime() / 1000.0) + 6000
+                            tokenBody.exp = Math.floor(new Date().getTime() / 1000.0) + 12000
                             var token = jwt.sign(tokenBody, process.env.SECRET);
                             return res.status(200).json({ token: token });
 
@@ -159,7 +159,7 @@ export namespace userController {
                             == keypair.publicKey()) {
 
                             let tokenBody = arr[0]
-                            tokenBody.exp = Math.floor(new Date().getTime() / 1000.0) + 6000
+                            tokenBody.exp = Math.floor(new Date().getTime() / 1000.0) + 12000
                             var token = jwt.sign(tokenBody, process.env.SECRET);
                             return res.status(200).json({ token: token });
 
