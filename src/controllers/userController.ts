@@ -52,9 +52,15 @@ export namespace userController {
 
             try {
                 let doesntExist = false;
-                if (!User[req.body.emailHash]) {
-                    doesntExist =true;
+                if (User != null) {
+                    if (!User[req.body.emailHash]) {
+                        doesntExist = true;
+                    }
+                } else {
+                    doesntExist = true;
+
                 }
+
                 // const snapshot = await firebase.database().ref(`users/${req.body.emailHash}`)
                 //     .once('value');
                 if (!doesntExist) {
@@ -64,7 +70,7 @@ export namespace userController {
                 } else {
                     const response = await axios.post(`${jigsawGateway}/api/transactions/userICOJIGXU`, req.body);
                     if (response != null) {
-                        if (response.status = 200) {
+                        if (response.status == 200) {
                             firebase.database().ref(`users/${req.body.emailHash}`)
                                 .set(req.body, (err) => {
                                     if (!err) {
@@ -87,7 +93,7 @@ export namespace userController {
                 }
             } catch (error) {
                 console.log("all broken")
-                return res.status(400).json({ err: "registration failed" });
+                return res.status(400).json({ err: " all broken registration failed" });
 
             }
 
