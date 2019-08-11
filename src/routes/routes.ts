@@ -4,6 +4,7 @@ import { articleRouter } from "./articleAPI";
 
 import { auth } from '../middleware/auth';
 import firebase from "../firebase/fireConnection";
+import { StellarRouter } from "./stellarBuilderAPI";
 
 var jwt = require('jsonwebtoken');
 const rateLimit = require("express-rate-limit");
@@ -18,6 +19,7 @@ const router: Router = Router();
 
 router.use("/user", userRouter);
 router.use("/article", regLimiter, articleRouter);
+router.use("/stellar", regLimiter, StellarRouter);
 
 router.post("/token", regLimiter, (req, res, next) => {
 

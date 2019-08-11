@@ -3,32 +3,64 @@ import firebase from "../firebase/fireConnection";
 import axios from 'axios';
 import { AES, enc } from "crypto-js";
 import sha256 from "sha256";
-import { Keypair } from "stellar-sdk";
+import { Keypair, Transaction } from "stellar-sdk";
+import StellarSdk from "stellar-sdk";
+
 import { jigsawGateway } from "../constants/api";
 import { time } from "cron";
-const jwt = require('jsonwebtoken');
+import * as dotenv from "dotenv";
+dotenv.config();
+StellarSdk.Network.useTestNetwork();
+var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 
-export namespace knowledgeController {
-    export class KnowledgeData {
-        public async FindKnowledge(req: Request, res: Response, next: NextFunction) {
 
+function signXDR(XDR: string) {
+    return new Promise((resolve, reject) => {
+        // console.log(process.env.JIGXUDISTRIBUTORSEC)
+        var sourceKeypair = Keypair.fromSecret(process.env.JIGXUDISTRIBUTORSEC);
+        const parsedTx = new Transaction(XDR)
+        parsedTx.sign(sourceKeypair)
+        // let x = parsedTx.toEnvelope().toXDR().toString('base64')
 
+        resolve(parsedTx);
+
+    }).catch(function (e) {
+        console.log(e);
+        // reject(e)
+
+    });
+}
+export namespace StellarController {
+    export class StellarData {
+        public async SignConversion(req: Request, res: Response, next: NextFunction) {
             try {
+                signXDR(req.body.xdr)
+                    .then(async (signedXdr: Transaction) => {
+                        // console.log(signedXdr.toEnvelope().toXDR().toString('base64'))
+                        try {
+                            const transactionResponse = await server.submitTransaction(signedXdr);
+                            if (transactionResponse == null) {
+                                console.log(transactionResponse)
+                                return res.status(201).json({ err: "Conversion Failed submission" });
+                            }
+                            return res.status(200).json({ status: "success" });
+                        } catch (e) {
+                            console.log(e.response.data.extras.result_codes.operations.toString())
+                            return res.status(202).json({ err: "Conversion Failed submitting: "+e.response.data.extras.result_codes.operations.toString() });
+                        }
 
-                    return res.status(200).json({ knowledge: [] });
-                
 
+                    }).catch((er) => {
+                        console.log(er.response.data.extras.result_codes.operations.toString())
+                        return res.status(203).json({ err: "Conversion Failed signing: "+er.response.data.extras.result_codes.operations.toString() });
+
+                    }
+                    )
             } catch (err) {
-                return res.status(400).json({ err: "Knowledge retrieval failed" });
+                console.log(err.response.data.extras.result_codes.operations.toString())
+                return res.status(204).json({ err: "Conversion Failed catch: "+err.response.data.extras.result_codes.operations.toString() });
             }
-
-
-
-
         }
-  
-
-
     }
 
 

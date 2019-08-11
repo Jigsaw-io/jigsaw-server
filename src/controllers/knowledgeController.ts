@@ -7,6 +7,7 @@ import { Keypair } from "stellar-sdk";
 import { jigsawGateway } from "../constants/api";
 import { time } from "cron";
 const jwt = require('jsonwebtoken');
+var sortBy = require('sort-by');
 
 //global cache for knowledge
 var Knowledge: any = null
@@ -135,14 +136,14 @@ export namespace knowledgeController {
                         if (!err) {
 
                             axios.post(`${jigsawGateway}/api/transactions/genesis`, { xdr: req.body.xdr })
-                            .then((response) => {
-                                console.log(response.data)
-                                return res.status(200).json({ status: "success" });
-                            })
-                            .catch(err => {
-                                console.log(err.message)
-                                return res.status(201).json({ err: "knowledge genesis failed in Gateway" });
-                            })
+                                .then((response) => {
+                                    console.log(response.data)
+                                    return res.status(200).json({ status: "success" });
+                                })
+                                .catch(err => {
+                                    console.log(err.message)
+                                    return res.status(201).json({ err: "knowledge genesis failed in Gateway" });
+                                })
                         } else {
                             return res.status(201).json({ err: "knowledge genesis failed db on fire" });
 
@@ -180,7 +181,7 @@ export namespace knowledgeController {
                                     console.log(err)
                                     return res.status(201).json({ err: "contribution failed in Gateway" });
                                 })
-                           
+
                         } else {
                             return res.status(201).json({ err: "contribution failed db on fire" });
 
@@ -229,7 +230,10 @@ export namespace knowledgeController {
                             arr.push(
                                 (Contribution[req.params.id])[key]
                             );
+
                         }
+
+                        arr.sort(sortBy('timestamp'))
                         return res.status(200).json({ contributions: arr });
                     }
 
@@ -249,6 +253,59 @@ export namespace knowledgeController {
 
         }
 
+        public async AddVoteForContribution(req: Request, res: Response, next: NextFunction) {
+
+            // console.log(req.body.hash)
+            try {
+
+                if (Contribution != null) {
+
+                    console.log(Contribution[req.body.kId])
+                    let Cont = null;
+
+                    if (!Contribution[req.body.kId]) {
+                        return res.status(201).json({ err: "No Knowledge in the system" });
+
+                    } else {
+
+                        Cont = Contribution[req.body.kId]
+                        Cont[req.body.cId].votes++
+                        firebase.database().ref(`contribution/${req.body.kId}/${req.body.cId}`)
+                            .set(Cont[req.body.cId], async (err) => {
+                                if (!err) {
+
+                                    // axios.post(`${jigsawGateway}/api/transactions/vote`, { xdr: req.body.xdr })
+                                    //     .then((response) => {
+                                    //         console.log(response)
+                                            return res.status(200).json({ status: "success" });
+                                        // })
+                                        // .catch(err => {
+                                        //     console.log(err)
+                                        //     return res.status(201).json({ err: "contribution failed in Gateway" });
+                                        // })
+
+                                } else {
+                                    return res.status(201).json({ err: "vote failed db on fire" });
+
+                                }
+                            })
+                    }
+
+
+                } else {
+                    return res.status(201).json({ err: "No Knowledge in the system" });
+
+                }
+            
+            } catch (error) {
+                console.log("all broken")
+                return res.status(400).json({ err: "contribution failed" });
+
+            }
+
+
+
+        }
 
 
     }
