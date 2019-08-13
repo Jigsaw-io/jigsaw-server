@@ -271,21 +271,31 @@ export namespace knowledgeController {
                         Cont = Contribution[req.body.kId]
                         Cont[req.body.cId].votes++
                         firebase.database().ref(`contribution/${req.body.kId}/${req.body.cId}`)
-                            .set(Cont[req.body.cId], async (err) => {
+                            .update(Cont[req.body.cId], async (err) => {
                                 if (!err) {
 
-                                    // axios.post(`${jigsawGateway}/api/transactions/vote`, { xdr: req.body.xdr })
-                                    //     .then((response) => {
-                                    //         console.log(response)
-                                            return res.status(200).json({ status: "success" });
-                                        // })
-                                        // .catch(err => {
-                                        //     console.log(err)
-                                        //     return res.status(201).json({ err: "contribution failed in Gateway" });
-                                        // })
+                                    firebase.database().ref(`votes/${req.body.kId}/${req.body.cId}/${req.body.hash}`)
+                                        .set(req.body, async (err1) => {
+                                            if (!err1) {
+                                                axios.post(`${jigsawGateway}/api/transactions/vote`, { xdr: req.body.xdr })
+                                                    .then((response) => {
+                                                        console.log(response)
+                                                        return res.status(200).json({ status: "success" });
+                                                    })
+                                                    .catch(err2 => {
+                                                        console.log(err2)
+                                                        return res.status(201).json({ err: "contribution failed in Gateway" });
+                                                    })
+                                            } else {
+                                                return res.status(201).json({ err: "vote failed, db on fire, vote collection" });
+
+                                            }
+                                        })
+
+
 
                                 } else {
-                                    return res.status(201).json({ err: "vote failed db on fire" });
+                                    return res.status(201).json({ err: "vote failed, db on fire" });
 
                                 }
                             })
@@ -296,7 +306,7 @@ export namespace knowledgeController {
                     return res.status(201).json({ err: "No Knowledge in the system" });
 
                 }
-            
+
             } catch (error) {
                 console.log("all broken")
                 return res.status(400).json({ err: "contribution failed" });
