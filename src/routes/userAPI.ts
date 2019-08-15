@@ -33,7 +33,17 @@ userRouter.post("/decrypt", (req: Request, res: Response, next: NextFunction) =>
     controller.DecryptSecret(req, res, next);
 });
 
+userRouter.post("/pushToken", (req: Request, res: Response, next: NextFunction) => {
 
+    const controller = new userController.UserData;
+    controller.UpdateUserPushToken(req, res, next);
+});
+
+userRouter.post("/sendMessage", (req: Request, res: Response, next: NextFunction) => {
+
+    const controller = new userController.UserData;
+    controller.SendMessage(req, res, next);
+});
 
 userRouter.get("/getAllPublicKeys", (req: Request, res: Response, next: NextFunction) => {
 

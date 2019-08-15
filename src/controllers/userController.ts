@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import firebase from "../firebase/fireConnection";
+import { admin } from "../firebase/admin";
+
 import axios from 'axios';
 import { AES, enc } from "crypto-js";
 import sha256 from "sha256";
@@ -235,6 +237,49 @@ export namespace userController {
 
 
         }
+
+        public async UpdateUserPushToken(req: Request, res: Response, next: NextFunction) {
+
+            try {
+                firebase.database().ref(`users/${req.body.emailHash}`)
+                    .update({ pushToken: req.body.pushToken }, (err) => {
+                        if (!err) {
+                            return res.status(200).json({ status: "success" });
+                        } else {
+                            return res.status(201).json({ err: "failed in db" });
+
+                        }
+                    })
+
+            } catch (err) {
+                return res.status(400).json({ err: "failed" });
+            }
+
+
+        }
+
+        public async SendMessage(req: Request, res: Response, next: NextFunction) {
+
+            try {
+                admin.messaging().send(req.body)
+                    .then((response: any) => {
+                        // Response is a message ID string.
+                        console.log('Successfully sent message:', response);
+                        return res.status(200).json({ status: "success" });
+
+                    })
+                    .catch((error: any) => {
+                        console.log('Error sending message:', error);
+                        return res.status(201).json({ status: "Error sending message:" });
+
+                    });
+            } catch (err) {
+                return res.status(400).json({ err: "failed" });
+            }
+
+
+        }
+
 
 
 
