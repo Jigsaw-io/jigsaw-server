@@ -70,7 +70,9 @@ export namespace knowledgeController {
                             {
                                 id: key,
                                 title: Knowledge[key].data.title,
-                                cover: Knowledge[key].data.cover
+                                cover: Knowledge[key].data.cover,                                
+                                alias: Knowledge[key].alias,
+                                publicKey: Knowledge[key].publicKey
                             }
                         );
                     }
