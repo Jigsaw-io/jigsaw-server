@@ -22,6 +22,11 @@ articleRouter.get("/find", (req: Request, res: Response, next: NextFunction) => 
     controller.FindKnowledge(req, res, next);
 });
 
+articleRouter.get("/getList", (req: Request, res: Response, next: NextFunction) => {
+
+    const controller = new knowledgeController.KnowledgeData;
+    controller.GetKnowledgeList(req, res, next);
+});
 
 articleRouter.get("/get/:id", (req: Request, res: Response, next: NextFunction) => {
 

@@ -70,7 +70,7 @@ export namespace knowledgeController {
                             {
                                 id: key,
                                 title: Knowledge[key].data.title,
-                                cover: Knowledge[key].data.cover,                                
+                                cover: Knowledge[key].data.cover,
                                 alias: Knowledge[key].alias,
                                 publicKey: Knowledge[key].publicKey
                             }
@@ -91,6 +91,59 @@ export namespace knowledgeController {
 
 
         }
+
+        public async GetKnowledgeList(req: Request, res: Response, next: NextFunction) {
+
+
+            try {
+
+                //old data juice
+                // const snapshot = await firebase.database().ref(`knowledge`)
+                //     .once('value');
+
+                // if (snapshot.val() != null) {
+                //     const lol = (snapshot.val());
+                //     var arr = [];
+                //     for (var key in lol) {
+                //         lol[key].id = key
+
+                //         arr.push(
+                //             {
+                //                 id: key,
+                //                 title: lol[key].data.title,
+                //                 cover: lol[key].data.cover
+                //             }
+                //         );
+                //     }
+
+                if (Knowledge != null) {
+                    var arr = [];
+                    for (var key in Knowledge) {
+                        Knowledge[key].id = key
+
+                        arr.push(
+                            {
+                                id: key,
+                                title: Knowledge[key].data.title,
+                            }
+                        );
+                    }
+
+                    return res.status(200).json({ knowledge: arr });
+                } else {
+                    return res.status(201).json({ err: "No Knowledge in the system" });
+
+                }
+
+            } catch (err) {
+                return res.status(400).json({ err: "Knowledge retrieval failed" });
+            }
+
+
+
+
+        }
+
 
 
         public async GetKnowledge(req: Request, res: Response, next: NextFunction) {
