@@ -258,10 +258,98 @@ export namespace userController {
 
         }
 
+        public async SendTransferMessage(req: Request, res: Response, next: NextFunction) {
+
+            try {
+                let doesntExist = false;
+                if (User != null) {
+                    if (!User[req.body.emailHash]) {
+                        doesntExist = true;
+                    }
+                } else {
+                    doesntExist = true;
+
+                }
+
+                if (doesntExist) {
+                    // if(!(!User[req.body.emailHash])){
+                    return res.status(203).json({ err: "user not found" });
+                    // }
+                } else {
+                    const user = User[req.body.emailHash]
+                    const message = {
+                        data: {},
+                        notification: {
+                            tag: "lol",
+                            body: "You received assets",
+                            icon: "./favicon.ico",
+                            // badge: "string",
+                            color: "#7537C6",
+                            sound: "./just-like-magic.mp3",
+                            title: "JIGSAW",
+                            // bodyLocKey : "string",
+                            // bodyLocArgs: "string",
+                            clickAction: "https://jigsaw.cf/profile/",
+                            // titleLocKey: "string",
+                            // titleLocArgs : "string",
+                        }
+                    }
+
+                    admin.messaging().sendToDevice(user.pushToken, message,
+                        {
+                            priority: "high",
+                            // dryRun: true,
+
+                        })
+                        .then((response: any) => {
+                            // Response is a message ID string.
+                            console.log('Successfully sent message:', response);
+                            return res.status(200).json({ status: "success" });
+
+                        })
+                        .catch((error: any) => {
+                            console.log('Error sending message:', error);
+                            return res.status(201).json({ status: "Error sending message:" });
+
+                        });
+                }
+
+
+            } catch (error) {
+                console.log("all broken")
+
+                return res.status(400).json({ err: "Login Failed" });
+            }
+
+        }
+
         public async SendMessage(req: Request, res: Response, next: NextFunction) {
 
             try {
-                admin.messaging().send(req.body)
+                const message = {
+                    data: {},
+                    notification: {
+                        tag: "lol",
+                        body: "You received assets",
+                        icon: "./favicon.ico",
+                        // badge: "string",
+                        color: "#7537C6",
+                        sound: "./just-like-magic.mp3",
+                        title: "JIGSAW",
+                        // bodyLocKey : "string",
+                        // bodyLocArgs: "string",
+                        clickAction: "https://jigsaw.cf/profile/",
+                        // titleLocKey: "string",
+                        // titleLocArgs : "string",
+                    }
+                }
+
+                admin.messaging().sendToDevice(req.body.token, message,
+                    {
+                        priority: "high",
+                        // dryRun: true,
+
+                    })
                     .then((response: any) => {
                         // Response is a message ID string.
                         console.log('Successfully sent message:', response);

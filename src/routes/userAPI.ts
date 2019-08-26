@@ -42,7 +42,7 @@ userRouter.post("/pushToken", (req: Request, res: Response, next: NextFunction) 
 userRouter.post("/sendMessage", (req: Request, res: Response, next: NextFunction) => {
 
     const controller = new userController.UserData;
-    controller.SendMessage(req, res, next);
+    controller.SendTransferMessage(req, res, next);
 });
 
 userRouter.get("/getAllPublicKeys", (req: Request, res: Response, next: NextFunction) => {
