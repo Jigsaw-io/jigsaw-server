@@ -289,7 +289,7 @@ export namespace userController {
                             title: "JIGSAW",
                             // bodyLocKey : "string",
                             // bodyLocArgs: "string",
-                            clickAction: "https://jigsaw.cf/profile/",
+                            clickAction: "https://jigsaw.cf/wallet/",
                             // titleLocKey: "string",
                             // titleLocArgs : "string",
                         }
@@ -318,7 +318,7 @@ export namespace userController {
             } catch (error) {
                 console.log("all broken")
 
-                return res.status(400).json({ err: "Login Failed" });
+                return res.status(400).json({ err: "message Failed" });
             }
 
         }
