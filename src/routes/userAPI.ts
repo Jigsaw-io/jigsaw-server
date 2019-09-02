@@ -50,6 +50,12 @@ userRouter.get("/getAllPublicKeys", (req: Request, res: Response, next: NextFunc
     const controller = new userController.UserData;
     controller.GetAllPublicKeys(req, res, next);
 });
+
+userRouter.post("/recordMessage", (req: Request, res: Response, next: NextFunction) => {
+
+    const controller = new userController.UserData;
+    controller.RecordMessage(req, res, next);
+});
 export { userRouter };
 
 

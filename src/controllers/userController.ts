@@ -258,6 +258,26 @@ export namespace userController {
 
         }
 
+
+        public async RecordMessage(req: Request, res: Response, next: NextFunction) {
+
+            try {
+                firebase.database().ref(`messages/${req.body.email}`)
+                    .set(req.body, (err) => {
+                        if (!err) {
+                            return res.status(200).json({ status: "success" });
+                        } else {
+                            return res.status(201).json({ err: "failed in db" });
+
+                        }
+                    })
+
+            } catch (err) {
+                return res.status(400).json({ err: "failed" });
+            }
+
+
+        }
         public async SendTransferMessage(req: Request, res: Response, next: NextFunction) {
 
             try {

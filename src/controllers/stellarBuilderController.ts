@@ -46,19 +46,65 @@ export namespace StellarController {
                             return res.status(200).json({ status: "success" });
                         } catch (e) {
                             console.log(e.response.data.extras.result_codes.operations.toString())
-                            return res.status(202).json({ err: "Conversion Failed submitting: "+e.response.data.extras.result_codes.operations.toString() });
+                            return res.status(202).json({ err: "Conversion Failed submitting: " + e.response.data.extras.result_codes.operations.toString() });
                         }
 
 
                     }).catch((er) => {
                         console.log(er.response.data.extras.result_codes.operations.toString())
-                        return res.status(203).json({ err: "Conversion Failed signing: "+er.response.data.extras.result_codes.operations.toString() });
+                        return res.status(203).json({ err: "Conversion Failed signing: " + er.response.data.extras.result_codes.operations.toString() });
 
                     }
                     )
             } catch (err) {
                 console.log(err.response.data.extras.result_codes.operations.toString())
-                return res.status(204).json({ err: "Conversion Failed catch: "+err.response.data.extras.result_codes.operations.toString() });
+                return res.status(204).json({ err: "Conversion Failed catch: " + err.response.data.extras.result_codes.operations.toString() });
+            }
+        }
+
+
+        public async DistributeAssets(req: Request, res: Response, next: NextFunction) {
+            try {
+                //check for a knowledge the contributors including the creator
+
+
+                //for each contribution check the votes
+                //if a contribution has high votes for the hghest 50% of contributions give the initial 5 voters maximum benefit
+                //also give teh contributor maximum benefit
+
+
+
+
+
+            } catch (error) {
+
+            }
+        }
+
+
+
+        public async AddReward(req: Request, res: Response, next: NextFunction) {
+            try {
+
+
+                firebase.database().ref(`rewards/${req.body.emailHash}`)
+                    .set(req.body, async (err) => {
+                        if (!err) {
+
+
+                            return res.status(200).json({ status: "success" });
+
+                        } else {
+                            return res.status(201).json({ err: "knowledge genesis failed db on fire" });
+
+                        }
+                    })
+
+
+
+
+            } catch (error) {
+
             }
         }
     }
