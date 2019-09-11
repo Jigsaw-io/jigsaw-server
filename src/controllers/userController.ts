@@ -259,18 +259,66 @@ export namespace userController {
         }
 
 
-        public async RecordMessage(req: Request, res: Response, next: NextFunction) {
+        public async RecordMessage(emailHash: any, messageBody: any): Promise<any> {
 
             try {
-                firebase.database().ref(`messages/${req.body.email}`)
-                    .set(req.body, (err) => {
-                        if (!err) {
-                            return res.status(200).json({ status: "success" });
-                        } else {
-                            return res.status(201).json({ err: "failed in db" });
+                var message = [];
+                message.push(messageBody);
 
+                const messageSnapshot = await firebase.database().ref(`messages/${emailHash}`)
+                    .once('value');
+
+                if (messageSnapshot != null) {
+                    for (var key in messageSnapshot.val()) {
+                        message.push((messageSnapshot.val())[key])
+                    }
+
+
+                }
+                firebase.database().ref(`messages/${emailHash}`)
+                    .set(message, (err) => {
+                        if (!err) {
+                            // return res.status(200).json({ status: "success" });
+                            return true
+                        } else {
+                            // return res.status(201).json({ err: "failed in db" });
+                            return null
                         }
                     })
+
+
+            } catch (err) {
+                // return res.status(400).json({ err: "failed" });
+                return null
+
+            }
+
+
+        }
+
+
+        public async GetMessagesByEmail(req: Request, res: Response, next: NextFunction) {
+
+            try {
+
+                var arr = []
+                const messageSnapshot = await firebase.database().ref(`messages/${req.body.emailHash}`)
+                    .once('value');
+
+                if (messageSnapshot == null) {
+                    return res.status(203).json({ err: "No messages" });
+
+                }
+
+                for (var key in messageSnapshot.val()) {
+                    (messageSnapshot.val())[key].emailHash = key
+                    arr.push((messageSnapshot.val())[key])
+                }
+
+
+
+                return res.status(200).json({ messages: arr });
+
 
             } catch (err) {
                 return res.status(400).json({ err: "failed" });
@@ -281,6 +329,12 @@ export namespace userController {
         public async SendTransferMessage(req: Request, res: Response, next: NextFunction) {
 
             try {
+
+                const recordAwait = await this.RecordMessage(req.body.emailHash, req.body)
+                if (recordAwait == null) {
+                    return res.status(202).json({ status: "Error recording message:" });
+                }
+
                 let doesntExist = false;
                 if (User != null) {
                     if (!User[req.body.emailHash]) {
@@ -288,7 +342,6 @@ export namespace userController {
                     }
                 } else {
                     doesntExist = true;
-
                 }
 
                 if (doesntExist) {
@@ -305,7 +358,7 @@ export namespace userController {
                             icon: "./favicon.ico",
                             // badge: "string",
                             color: "#7537C6",
-                            sound: "./just-like-magic.mp3",
+                            sound: "just-like-magic.mp3",
                             title: "JIGSAW",
                             // bodyLocKey : "string",
                             // bodyLocArgs: "string",
@@ -319,17 +372,80 @@ export namespace userController {
                         {
                             priority: "high",
                             // dryRun: true,
-
                         })
                         .then((response: any) => {
                             // Response is a message ID string.
                             console.log('Successfully sent message:', response);
                             return res.status(200).json({ status: "success" });
-
                         })
                         .catch((error: any) => {
                             console.log('Error sending message:', error);
                             return res.status(201).json({ status: "Error sending message:" });
+                        });
+                }
+
+            } catch (error) {
+                console.log("all broken")
+                return res.status(400).json({ err: "message Failed" });
+            }
+        }
+
+        public async SendRewardMessage(publicKey: any): Promise<any> {
+
+            try {
+
+                const snapshot = await firebase.database().ref(`users`)
+                    .orderByChild('publicKey').equalTo(publicKey).limitToFirst(1)
+                    .once('value');
+
+                if (snapshot == null) {
+                    return null
+                } else {
+                    const lol = (snapshot.val());
+                    var arr = [];
+                    for (var key in lol) {
+                        arr.push(lol[key]);
+                    }
+                    const user = arr[0];
+                    const message = {
+                        data: {},
+                        notification: {
+                            tag: "lol",
+                            body: "You received assets",
+                            icon: "./favicon.ico",
+                            // badge: "string",
+                            color: "#7537C6",
+                            sound: "just-like-magic.mp3",
+                            title: "JIGSAW",
+                            // bodyLocKey : "string",
+                            // bodyLocArgs: "string",
+                            clickAction: "https://jigsaw.cf/wallet/",
+                            // titleLocKey: "string",
+                            // titleLocArgs : "string",
+                        }
+                    }
+
+                    if (user.pushToken == null) {
+                        console.log('Error sending message: token not found');
+
+                        return null
+
+                    }
+                    admin.messaging().sendToDevice(user.pushToken, message,
+                        {
+                            priority: "high",
+                            // dryRun: true,
+
+                        })
+                        .then((response: any) => {
+                            // Response is a message ID string.
+                            console.log('Successfully sent message:', response);
+                            return true
+
+                        })
+                        .catch((error: any) => {
+                            console.log('Error sending message:', error);
+                            return null
 
                         });
                 }
@@ -338,56 +454,10 @@ export namespace userController {
             } catch (error) {
                 console.log("all broken")
 
-                return res.status(400).json({ err: "message Failed" });
+                return null
             }
 
         }
-
-        public async SendMessage(req: Request, res: Response, next: NextFunction) {
-
-            try {
-                const message = {
-                    data: {},
-                    notification: {
-                        tag: "lol",
-                        body: "You received assets",
-                        icon: "./favicon.ico",
-                        // badge: "string",
-                        color: "#7537C6",
-                        sound: "./just-like-magic.mp3",
-                        title: "JIGSAW",
-                        // bodyLocKey : "string",
-                        // bodyLocArgs: "string",
-                        clickAction: "https://jigsaw.cf/profile/",
-                        // titleLocKey: "string",
-                        // titleLocArgs : "string",
-                    }
-                }
-
-                admin.messaging().sendToDevice(req.body.token, message,
-                    {
-                        priority: "high",
-                        // dryRun: true,
-
-                    })
-                    .then((response: any) => {
-                        // Response is a message ID string.
-                        console.log('Successfully sent message:', response);
-                        return res.status(200).json({ status: "success" });
-
-                    })
-                    .catch((error: any) => {
-                        console.log('Error sending message:', error);
-                        return res.status(201).json({ status: "Error sending message:" });
-
-                    });
-            } catch (err) {
-                return res.status(400).json({ err: "failed" });
-            }
-
-
-        }
-
 
 
 

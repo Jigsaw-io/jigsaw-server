@@ -51,11 +51,17 @@ userRouter.get("/getAllPublicKeys", (req: Request, res: Response, next: NextFunc
     controller.GetAllPublicKeys(req, res, next);
 });
 
-userRouter.post("/recordMessage", (req: Request, res: Response, next: NextFunction) => {
+// userRouter.post("/recordMessage", (req: Request, res: Response, next: NextFunction) => {
 
+//     const controller = new userController.UserData;
+//     controller.RecordMessage(req);
+// });
+
+userRouter.post("/getMessagesByEmailHash", (req: Request, res: Response, next: NextFunction) => {
     const controller = new userController.UserData;
-    controller.RecordMessage(req, res, next);
+    controller.GetMessagesByEmail(req, res, next);
 });
+
 export { userRouter };
 
 

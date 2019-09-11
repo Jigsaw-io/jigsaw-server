@@ -63,46 +63,20 @@ export namespace StellarController {
         }
 
 
-        public async DistributeAssets(req: Request, res: Response, next: NextFunction) {
-            try {
-                //check for a knowledge the contributors including the creator
-
-
-                //for each contribution check the votes
-                //if a contribution has high votes for the hghest 50% of contributions give the initial 5 voters maximum benefit
-                //also give teh contributor maximum benefit
-
-
-
-
-
-            } catch (error) {
-
-            }
-        }
-
+      
 
 
         public async AddReward(req: Request, res: Response, next: NextFunction) {
             try {
-
-
+                
                 firebase.database().ref(`rewards/${req.body.emailHash}`)
                     .set(req.body, async (err) => {
                         if (!err) {
-
-
                             return res.status(200).json({ status: "success" });
-
                         } else {
                             return res.status(201).json({ err: "knowledge genesis failed db on fire" });
-
                         }
-                    })
-
-
-
-
+                    });
             } catch (error) {
 
             }

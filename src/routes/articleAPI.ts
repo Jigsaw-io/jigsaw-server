@@ -51,6 +51,13 @@ articleRouter.get("/getContributions/:id", (req: Request, res: Response, next: N
     controller.GetContribution(req, res, next);
 });
 
+articleRouter.get("/distributeAssets/:id", (req: Request, res: Response, next: NextFunction) => {
+
+    const controller = new knowledgeController.KnowledgeData;
+    controller.DistributeAssets(req, res, next);
+});
+
+
 export { articleRouter };
 
 

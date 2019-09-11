@@ -3,9 +3,15 @@ import firebase from "../firebase/fireConnection";
 import axios from 'axios';
 import { AES, enc } from "crypto-js";
 import sha256 from "sha256";
-import { Keypair } from "stellar-sdk";
+import { Keypair, Transaction, Asset, Account } from "stellar-sdk";
+import StellarSdk from "stellar-sdk";
 import { jigsawGateway } from "../constants/api";
 import { time } from "cron";
+import * as dotenv from "dotenv";
+import { userController } from "./userController";
+dotenv.config();
+
+var sequenceNo = "";
 const jwt = require('jsonwebtoken');
 var sortBy = require('sort-by');
 
@@ -373,7 +379,207 @@ export namespace knowledgeController {
         }
 
 
+        public async DistributeAssets(req: Request, res: Response, next: NextFunction) {
+            try {
+                //check for a knowledge the contributors including the creator
+                // console.log(req.params.id)
+
+
+                // arr.sort(sortBy('timestamp'))
+
+                // var canReward = false;
+                const knowledgeSnapshot = await firebase.database().ref(`knowledge/${req.params.id}`)
+                    .once('value');
+
+                const contributionSnapshot: any = await firebase.database().ref(`contribution/${req.params.id}`)
+                    .once('value');
+
+                let value = 0;
+                let creator;
+                let contributors: any = []
+                let voters: any = []
+                if (knowledgeSnapshot != null) {
+                    value = value + 5;
+                    creator = {
+                        timestamp: (knowledgeSnapshot.val()).timestamp,
+                        publicKey: (knowledgeSnapshot.val()).publicKey,
+                        reward: 5
+                    }
+
+                    if (contributionSnapshot != null) {
+
+                        for (var key in contributionSnapshot.val()) {
+
+                            contributors.push({
+                                timestamp: ((contributionSnapshot.val())[key]).timestamp,
+                                publicKey: ((contributionSnapshot.val())[key]).publicKey,
+                                reward: 2
+                            })
+                            value = value + 2;
+
+                            const votesSnapshot: any = await firebase.database().ref(`votes/${req.params.id}/${key}`)
+                                .once('value');
+
+                            if (votesSnapshot != null) {
+                                for (var key in votesSnapshot.val()) {
+                                    voters.push({
+                                        timestamp: ((votesSnapshot.val())[key]).timestamp,
+                                        publicKey: ((votesSnapshot.val())[key]).publicKey,
+                                        reward: 1
+                                    })
+
+                                    value = value + 1;
+                                }
+                            }
+                        }
+                    }
+                    // canReward=true;
+                }
+
+                // console.log(voters.length)
+
+
+
+                const cryptoAwaiter = await this.CryptoEvaluatorV1(value, creator, contributors, voters)
+                if (!cryptoAwaiter.status) {
+
+
+                    return res.status(400).json({ err: "Rewarding failed" })
+
+                }
+
+
+
+                //for each contribution check the votes
+                //if a contribution has high votes for the hghest 50% of contributions give the initial 5 voters maximum benefit
+                //also give teh contributor maximum benefit
+
+                cryptoAwaiter.data.forEach(async (element: any) => {
+                    const rewardAwaiter = await this.Reward(element.publicKey, element.reward)
+                    if (rewardAwaiter == null) {
+
+                        return
+                        // return res.status(400).json({ err: "Rewarding failed" })
+
+                    }
+
+                    const controller = new userController.UserData;
+                    const messageAwaiter = await controller.SendRewardMessage(element.publicKey);
+                    if (messageAwaiter == null) {
+
+                        return
+                        // return res.status(400).json({ err: "Rewarding failed" })
+
+                    }
+
+                    
+                });
+
+
+                return res.status(200).json({ rewards: cryptoAwaiter.data });
+
+
+                // check for a knowledge the contributors including the creator
+
+            } catch (err) {
+                return res.status(400).json({ err: "Knowledge retrieval failed" });
+            }
+        }
+
+
+        public async CryptoEvaluatorV1(pool: number, creator: any, contributors: any, voters: any) {
+            try {
+                var rewardList: any = []
+                rewardList.push(creator)
+                contributors.forEach((element: any) => {
+                    rewardList.push(element);
+                });
+
+                voters.forEach((element: any) => {
+                    rewardList.push(element);
+                });
+
+                rewardList.sort(sortBy('timestamp'))
+
+                var result = { status: true, data: rewardList };
+                return result
+            } catch (error) {
+                console.log("all broken")
+                var result = { status: false, data: null };
+                return result
+            }
+        }
+
+
+        public async Reward(DestinationPublicKey: any, Amount: any) {
+            try {
+
+                var JIGXKDistributorPublicKey = process.env.JIGXKDISTRIBUTORPUB;
+                var JIGXKDistributorSecretKey = process.env.JIGXKDISTRIBUTORSEC;
+
+                console.log("passed 1")
+                var JIGXKIssuerPublicKey = "GCSQ475DWPDJAZABG5OHJDZ7OTP2SZQAYP5RHXPRLCCXKWPF3KN2PFAL";
+                var keypair = Keypair.fromSecret(JIGXKDistributorSecretKey)
+
+                console.log("passed 2")
+
+                var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
+
+
+
+                let transaction;
+                if (sequenceNo != "") {
+                    transaction = new StellarSdk.TransactionBuilder(new Account(JIGXKDistributorPublicKey, sequenceNo))
+                        .addOperation(StellarSdk.Operation.payment({
+                            destination: DestinationPublicKey,
+                            asset: new Asset("JIGXK", JIGXKIssuerPublicKey),
+                            amount: Amount.toString()
+                        }))
+                        .build();
+                } else {
+                    const sourceAccount = await server.loadAccount(JIGXKDistributorPublicKey);
+                    if (sourceAccount === null) {
+                        return null
+                    }
+
+                    transaction = new StellarSdk.TransactionBuilder(sourceAccount)
+                        .addOperation(StellarSdk.Operation.payment({
+                            destination: DestinationPublicKey,
+                            asset: new Asset("JIGXK", JIGXKIssuerPublicKey),
+                            amount: Amount.toString()
+                        }))
+                        .build();
+                }
+                console.log("passed 3")
+
+                sequenceNo = transaction.sequence.toString()
+
+                // Sign the transaction to prove you are actually the person sending it.
+                transaction.sign(keypair);
+
+                const xdr = transaction.toEnvelope().toXDR('base64')
+                console.log("\n" + xdr)
+                // And finally, send it off to Stellar!
+                const transactionResponse = await server.submitTransaction(transaction);
+                if (transactionResponse === null) {
+                    return null
+                }
+
+                console.log("passed 4")
+
+
+                return true
+            } catch (error) {
+                console.log("all broken")
+                return null
+            }
+        }
+
+
+
     }
+
+
 
 
 }
