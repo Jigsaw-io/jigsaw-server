@@ -464,15 +464,25 @@ export namespace knowledgeController {
                     }
 
                     const controller = new userController.UserData;
-                    const messageAwaiter = await controller.SendRewardMessage(element.publicKey);
-                    if (messageAwaiter == null) {
+                    controller.SendRewardMessage(element.publicKey).then((res) => {
 
-                        return
-                        // return res.status(400).json({ err: "Rewarding failed" })
+                        if (res == null) {
+                            return
+                        }
+                    })
 
-                    }
 
-                    
+                    // const messagBody = {
+                    //     amount:element.reward,
+                    //     emailHash:
+                    // }
+                    // this.RecordMessage(req.body.emailHash, req.body).then((res) => {
+                    //     if (res == null) {
+                    //         return res.status(202).json({ status: "Error recording message:" });
+
+                    //     }
+                    // })
+
                 });
 
 
