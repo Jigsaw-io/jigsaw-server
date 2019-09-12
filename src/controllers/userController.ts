@@ -330,10 +330,13 @@ export namespace userController {
 
             try {
 
-                const recordAwait = await this.RecordMessage(req.body.emailHash, req.body)
-                if (recordAwait == null) {
-                    return res.status(202).json({ status: "Error recording message:" });
-                }
+                this.RecordMessage(req.body.emailHash, req.body).then((res) => {
+
+                    if (res == null) {
+                        return res.status(202).json({ status: "Error recording message:" });
+
+                    }
+                })
 
                 let doesntExist = false;
                 if (User != null) {
