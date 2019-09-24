@@ -6,7 +6,7 @@
 ## Quick start
 
 - Clone the repo: `git clone https://github.com/Zeemzo/jigsaw-server.git`.
-- Enter Directory : `cd jigsaw-client`.
+- Enter Directory : `cd jigsaw-server`.
 - Install dependencies : `npm install`.
 - Run app: `npm run start`.
 - Build app: `npm run build`.
