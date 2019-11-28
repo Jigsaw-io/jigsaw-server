@@ -296,6 +296,26 @@ export namespace userController {
 
         }
 
+        public async ContactMessage(req: Request, res: Response, next: NextFunction) {
+
+        
+            try {
+                firebase.database().ref(`feedback/${req.body.email}`)
+                    .set(req.body, (err) => {
+                        if (!err) {
+                            return res.status(200).json({ status: "success" });
+                        } else {
+                            return res.status(201).json({ err: "failed in db" });
+
+                        }
+                    })
+
+            } catch (err) {
+                return res.status(400).json({ err: "failed" });
+            }
+
+
+        }
 
         public async GetMessagesByEmail(req: Request, res: Response, next: NextFunction) {
 
